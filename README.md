@@ -1,77 +1,175 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌌 UI Generator + Agent Pipeline
 
-## Getting Started
+A high-performance, distraction-free system for generating premium React components using an **AI-driven multi-agent pipeline**. The system evolves from a PRD-based UI generator into a complete **agentic architecture with memory, tool-calling, and multi-agent orchestration**.
 
-First, run the development server:
+<video width="100%" controls poster="src/assets/prototype.png">
+  <source src="SpecToUIAgent.mp4" type="video/mp4">
+  Your browser does not support the video tag. [Watch Demo Video here](SpecToUIAgent.mp4)
+</video>
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+![Prototype Dashboard](src/assets/prototype.png)
+
+---
+
+# 🚀 Project Phases
+
+## 🟢 Phase 1 — UI Generator (Frontend Task)
+
+Built a React/Next.js application where:
+
+- User provides a **Product Requirements Document (PRD)**
+- AI generates:
+  - UI component tree
+  - Tailwind-based React code
+- Features:
+  - Real-time preview using Babel
+  - Code export
+  - Multi-model LLM support
+  - Design history
+
+👉 This phase focuses on **PRD → UI generation**
+
+---
+
+## 🔵 Phase 2 — Agent Pipeline (Capstone)
+
+Extended Phase 1 into a **complete agentic system** with:
+
+### 🤖 Multi-Agent Architecture
+- **Agent 1: PRD Analyzer**
+  - Converts raw PRD → structured JSON (pages, components, features)
+- **Agent 2: UI Generator**
+  - Converts structured data → React + Tailwind UI
+
+---
+
+### 🔧 Tool Calling Layer
+Agents use tools instead of directly generating everything:
+
+- `generateComponentTree()`
+- `previewUI()`
+- `exportCode()`
+
+---
+
+### 🧠 Memory System
+- Stores:
+  - Previous PRDs
+  - Generated UI
+  - Structured outputs
+- Enables:
+  - reuse
+  - iteration
+  - history tracking
+
+---
+
+### 🔄 Agent Flow
+
+```mermaid
+graph TD
+    User([User PRD Input]) --> Analyzer[Agent 1: PRD Analyzer]
+    Analyzer --> Memory[Memory Store]
+    Memory --> UIGen[Agent 2: UI Generator]
+    UIGen --> Tools[Tool Layer]
+
+    Tools --> Preview[Preview UI]
+    Tools --> Export[Export Code]
+
+    Preview --> UI[Frontend Display]
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
+# ✨ Features
 
+- **🚀 Real-time UI Generation**
+- **🤖 Multi-Agent Pipeline (Analyzer + Generator)**
+- **🧠 Memory Persistence**
+- **🔧 Tool Calling Architecture**
+- **💎 Premium UI Rendering**
+- **🛠 Code Preview + Export**
+- **📦 PRD → Structured → UI Flow**
 
-## Tech Stack
+---
 
-- `Next.js` (App Router + Route Handlers)
-- `React 19` (client components)
-- `TypeScript`
-- `Tailwind CSS` (v4) for styling
-- `@google/generative-ai` for Gemini model access + function/tool calling
-- OpenAI-compatible tool calling for Groq/xAI (`/openai/v1/chat/completions` endpoints)
-- `PrismJS` for code highlighting (Code tab)
+# 🏗 Architecture
 
-## 2+1 Agent Pipeline (with Tool Calling + Memory)
+The system uses a **hybrid execution model**:
 
-This app turns your PRD into a single React/Tailwind component by running a 2+1 agent pipeline:
+- Server: LLM + agent orchestration  
+- Client: UI rendering + preview  
 
-- **Orchestrator (1)**: decides when to call tools, coordinates execution, and finalizes the response via `submit_final_component`
-- **Architect (2a)**: converts your PRD + session context into a UI spec (no code)
-- **Developer (2b)**: converts the UI spec + session context into the final executable TSX component
+```mermaid
+graph TD
+    User([User]) -->|Inputs PRD| AnalyzerAgent
+    AnalyzerAgent -->|Structured JSON| Memory
+    Memory --> UIGeneratorAgent
 
-### Memory (Session-Scoped)
+    UIGeneratorAgent --> Tools
 
-- The browser generates a `sessionId` and stores it in `localStorage` (`ai_ui_session_id`)
-- The server keeps TTL-based in-memory session memory (Map + expiry)
-- Tools can only read/write via `memory_read` and `memory_write` (merge semantics for `summary`, `facts`, and `lastSpec`)
+    Tools -->|Generate UI| API
+    API --> Frontend
 
-### Tool Calling
+    Frontend --> Preview[Babel Preview]
+    Frontend --> Export[Code Viewer]
+```
 
-Server-side tool handlers are exposed to the model and executed in a loop until completion:
+---
 
-- `memory_read`
-- `memory_write`
-- `run_architect`
-- `run_developer`
-- `submit_final_component`
+# 🛠 Tech Stack
 
-For streaming UI updates, `/api/generate/stream` sends SSE events:
-- `trace` (each tool step)
-- `done` (final TSX)
-- `error` (failure reason)
+| Layer | Technologies |
+| :--- | :--- |
+| **Frontend** | React, Next.js 15, Tailwind CSS |
+| **Runtime** | Babel Standalone |
+| **AI Models** | Gemini / Groq / Grok |
+| **Agent System** | Custom multi-agent logic |
+| **Memory** | Local storage / JSON |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# 🚀 Getting Started
 
-## Learn More
+### 1. Setup Environment
 
-To learn more about Next.js, take a look at the following resources:
+```
+NEXT_PUBLIC_GEMINI_API_KEY=your_key_here
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 2. Install
 
-## Deploy on Vercel
+```
+npm install
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 3. Run
+
+```
+npm run dev
+```
+
+---
+
+# 🎯 Key Concept
+
+This project demonstrates:
+
+> Transition from a **single AI feature** → **complete agentic system**
+
+---
+
+# 👥 Team: TeamDelta
+
+- Shobhin Shaji  
+- Mohammed Jalal MK  
+
+---
+
+# 📜 License
+
+MIT License

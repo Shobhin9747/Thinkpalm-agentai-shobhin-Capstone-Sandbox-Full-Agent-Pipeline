@@ -1,0 +1,92 @@
+[
+  {
+    "id": "a1yd9d",
+    "code": "import React, { useState } from 'react';\n\nconst RegistrationPage = () => {\n  const [username, setUsername] = useState('');\n  const [email, setEmail] = useState('');\n  const [password, setPassword] = useState('');\n  const [confirmPassword, setConfirmPassword] = useState('');\n  const [gender, setGender] = useState('');\n  const [country, setCountry] = useState('');\n  const [terms, setTerms] = useState(false);\n  const [description, setDescription] = useState('');\n  const [passwordError, setPasswordError] = useState(null);\n  const [termsError, setTermsError] = useState(null);\n\n  const handleSubmit = (e) => {\n    e.preventDefault();\n    if (password !== confirmPassword) {\n      setPasswordError('Passwords do not match');\n    } else {\n      setPasswordError(null);\n    }\n    if (!terms) {\n      setTermsError('Please agree to the terms and conditions');\n    } else {\n      setTermsError(null);\n    }\n    if (password === confirmPassword && terms) {\n      // Submit the form\n      console.log('Form submitted');\n    }\n  };\n\n  return (\n    <div className=\"h-screen w-screen flex justify-center items-center bg-gradient-to-r from-[#1a1d23] to-[#2f343a]\">\n      <form\n        onSubmit={handleSubmit}\n        className=\"bg-[#272b34] p-10 rounded-2xl shadow-md shadow-[#1a1d23] w-[500px] md:w-[400px] sm:w-[300px] xs:w-[250px]\"\n      >\n        <h1 className=\"text-3xl text-[#22d3ee] font-bold mb-4\">Registration Page</h1>\n        <InputField\n          type=\"text\"\n          value={username}\n          onChange={(e) => setUsername(e.target.value)}\n          placeholder=\"Username\"\n          label=\"Username\"\n        />\n        <InputField\n          type=\"email\"\n          value={email}\n          onChange={(e) => setEmail(e.target.value)}\n          placeholder=\"Email\"\n          label=\"Email\"\n        />\n        <InputField\n          type=\"password\"\n          value={password}\n          onChange={(e) => setPassword(e.target.value)}\n          placeholder=\"Password\"\n          label=\"Password\"\n        />\n        <InputField\n          type=\"password\"\n          value={confirmPassword}\n          onChange={(e) => setConfirmPassword(e.target.value)}\n          placeholder=\"Confirm Password\"\n          label=\"Confirm Password\"\n          error={passwordError}\n        />\n        <RadioButtons\n          value={gender}\n          onChange={(e) => setGender(e.target.value)}\n          options={[\n            { value: 'male', label: 'Male' },\n            { value: 'female', label: 'Female' },\n            { value: 'other', label: 'Other' },\n          ]}\n          label=\"Gender\"\n        />\n        <Dropdown\n          value={country}\n          onChange={(e) => setCountry(e.target.value)}\n          options={[\n            { value: 'usa', label: 'USA' },\n            { value: 'canada', label: 'Canada' },\n            { value: 'mexico', label: 'Mexico' },\n          ]}\n          label=\"Country\"\n        />\n        <Textarea\n          value={description}\n          onChange={(e) => setDescription(e.target.value)}\n          placeholder=\"Description\"\n          label=\"Description\"\n        />\n        <Checkbox\n          checked={terms}\n          onChange={(e) => setTerms(e.target.checked)}\n          label=\"I agree to the terms and conditions\"\n          error={termsError}\n        />\n        <button\n          type=\"submit\"\n          className=\"bg-[#22d3ee] hover:bg-[#1ab9f7] text-[#1a1d23] font-bold py-2 px-4 rounded-md shadow-md shadow-[#1a1d23]\"\n        >\n          Register\n        </button>\n      </form>\n    </div>\n  );\n};\n\nconst InputField = ({ type, value, onChange, placeholder, label, error }) => {\n  return (\n    <div className=\"mb-4\">\n      <label className=\"text-[#a855f7] font-bold\">{label}</label>\n      <input\n        type={type}\n        value={value}\n        onChange={onChange}\n        placeholder={placeholder}\n        className={`bg-[#2f343a] p-2 rounded-md shadow-md shadow-[#1a1d23] w-full ${\n          error ? 'border-red-500 border-2' : 'border-[#1a1d23] border'\n        }`}\n      />\n      {error && <p className=\"text-red-500\">{error}</p>}\n    </div>\n  );\n};\n\nconst RadioButtons = ({ value, onChange, options, label }) => {\n  return (\n    <div className=\"mb-4\">\n      <label className=\"text-[#a855f7] font-bold\">{label}</label>\n      <div className=\"flex flex-wrap\">\n        {options.map((option) => (\n          <div key={option.value} className=\"mr-4\">\n            <input\n              type=\"radio\"\n              value={option.value}\n              checked={value === option.value}\n              onChange={onChange}\n              className=\"bg-[#2f343a] p-2 rounded-md shadow-md shadow-[#1a1d23]\"\n            />\n            <span className=\"text-[#a855f7] font-bold\">{option.label}</span>\n          </div>\n        ))}\n      </div>\n    </div>\n  );\n};\n\nconst Dropdown = ({ value, onChange, options, label }) => {\n  return (\n    <div className=\"mb-4\">\n      <label className=\"text-[#a855f7] font-bold\">{label}</label>\n      <select\n        value={value}\n        onChange={onChange}\n        className=\"bg-[#2f343a] p-2 rounded-md shadow-md shadow-[#1a1d23] w-full\"\n      >\n        {options.map((option) => (\n          <option key={option.value} value={option.value}>\n            {option.label}\n          </option>\n        ))}\n      </select>\n    </div>\n  );\n};\n\nconst Textarea = ({ value, onChange, placeholder, label }) => {\n  return (\n    <div className=\"mb-4\">\n      <label className=\"text-[#a855f7] font-bold\">{label}</label>\n      <textarea\n        value={value}\n        onChange={onChange}\n        placeholder={placeholder}\n        className=\"bg-[#2f343a] p-2 rounded-md shadow-md shadow-[#1a1d23] w-full h-20\"\n      />\n    </div>\n  );\n};\n\nconst Checkbox = ({ checked, onChange, label, error }) => {\n  return (\n    <div className=\"mb-4\">\n      <label className=\"text-[#a855f7] font-bold\">{label}</label>\n      <input\n        type=\"checkbox\"\n        checked={checked}\n        onChange={onChange}\n        className={`bg-[#2f343a] p-2 rounded-md shadow-md shadow-[#1a1d23] ${\n          error ? 'border-red-500 border-2' : 'border-[#1a1d23] border'\n        }`}\n      />\n      {error && <p className=\"text-red-500\">{error}</p>}\n    </div>\n  );\n};\n\nexport default RegistrationPage;",
+    "structuredJson": {
+      "pages": [
+        "Registration Page"
+      ],
+      "components": [
+        "Input Fields",
+        "Radio Buttons",
+        "Dropdown",
+        "Textarea",
+        "Checkbox",
+        "Icons"
+      ],
+      "features": [
+        "Responsive Design",
+        "Smooth Hover/Focus Effects",
+        "Rounded Corners",
+        "Subtle Shadows",
+        "Gradient Background",
+        "Validation for Password Matching",
+        "Validation for Terms & Conditions Agreement"
+      ]
+    },
+    "prd": "Create a modern responsive registration form with a clean UI. Include the following fields: Full Name, Email Address, Phone Number, Username, Password, Confirm Password, Date of Birth, Gender (radio buttons), Country (dropdown), Address (textarea), and a checkbox for agreeing to Terms & Conditions. Add icons inside input fields, smooth hover/focus effects, rounded corners, subtle shadows, and a gradient background.",
+    "timestamp": 1776350842141,
+    "title": "Create a modern responsive reg..."
+  },
+  {
+    "id": "3jbmwt",
+    "code": "import React, { useState } from 'react';\n\nconst RegistrationPage = () => {\n  const [username, setUsername] = useState('');\n  const [email, setEmail] = useState('');\n  const [password, setPassword] = useState('');\n  const [confirmPassword, setConfirmPassword] = useState('');\n  const [gender, setGender] = useState('');\n  const [country, setCountry] = useState('');\n  const [terms, setTerms] = useState(false);\n  const [description, setDescription] = useState('');\n  const [passwordError, setPasswordError] = useState(null);\n  const [termsError, setTermsError] = useState(null);\n\n  const handleSubmit = (e) => {\n    e.preventDefault();\n    if (password !== confirmPassword) {\n      setPasswordError('Passwords do not match');\n    } else {\n      setPasswordError(null);\n    }\n    if (!terms) {\n      setTermsError('Please agree to the terms and conditions');\n    } else {\n      setTermsError(null);\n    }\n  };\n\n  return (\n    <div className=\"h-screen w-screen bg-gradient-to-r from-[#2f343a] to-[#1a1d23] flex justify-center items-center\">\n      <form\n        onSubmit={handleSubmit}\n        className=\"bg-[#1a1d23] p-10 rounded-2xl shadow-md shadow-[#2f343a] w-[500px] md:w-[400px] sm:w-[300px] flex flex-col gap-5\"\n      >\n        <h1 className=\"text-3xl text-[#22d3ee] font-bold\">Registration Page</h1>\n        <InputField\n          type=\"text\"\n          value={username}\n          onChange={(e) => setUsername(e.target.value)}\n          placeholder=\"Username\"\n        />\n        <InputField\n          type=\"email\"\n          value={email}\n          onChange={(e) => setEmail(e.target.value)}\n          placeholder=\"Email\"\n        />\n        <InputField\n          type=\"password\"\n          value={password}\n          onChange={(e) => setPassword(e.target.value)}\n          placeholder=\"Password\"\n        />\n        <InputField\n          type=\"password\"\n          value={confirmPassword}\n          onChange={(e) => setConfirmPassword(e.target.value)}\n          placeholder=\"Confirm Password\"\n        />\n        {passwordError && (\n          <p className=\"text-red-500 text-sm\">{passwordError}</p>\n        )}\n        <RadioButtons\n          value={gender}\n          onChange={(e) => setGender(e.target.value)}\n          options={[\n            { value: 'male', label: 'Male' },\n            { value: 'female', label: 'Female' },\n            { value: 'other', label: 'Other' },\n          ]}\n        />\n        <Dropdown\n          value={country}\n          onChange={(e) => setCountry(e.target.value)}\n          options={[\n            { value: 'usa', label: 'USA' },\n            { value: 'canada', label: 'Canada' },\n            { value: 'mexico', label: 'Mexico' },\n          ]}\n        />\n        <Textarea\n          value={description}\n          onChange={(e) => setDescription(e.target.value)}\n          placeholder=\"Description\"\n        />\n        <Checkbox\n          checked={terms}\n          onChange={(e) => setTerms(e.target.checked)}\n          label=\"I agree to the terms and conditions\"\n        />\n        {termsError && (\n          <p className=\"text-red-500 text-sm\">{termsError}</p>\n        )}\n        <button\n          type=\"submit\"\n          className=\"bg-[#22d3ee] hover:bg-[#1a1d23] hover:text-[#22d3ee] text-[#1a1d23] p-2 rounded-2xl shadow-md shadow-[#2f343a] w-full\"\n        >\n          Register\n        </button>\n      </form>\n    </div>\n  );\n};\n\nconst InputField = ({ type, value, onChange, placeholder }) => {\n  return (\n    <input\n      type={type}\n      value={value}\n      onChange={onChange}\n      placeholder={placeholder}\n      className=\"bg-[#2f343a] p-2 rounded-2xl shadow-md shadow-[#1a1d23] w-full\"\n    />\n  );\n};\n\nconst RadioButtons = ({ value, onChange, options }) => {\n  return (\n    <div className=\"flex flex-col gap-2\">\n      {options.map((option) => (\n        <div key={option.value} className=\"flex gap-2\">\n          <input\n            type=\"radio\"\n            value={option.value}\n            checked={value === option.value}\n            onChange={onChange}\n            className=\"bg-[#2f343a] p-2 rounded-2xl shadow-md shadow-[#1a1d23]\"\n          />\n          <label className=\"text-[#a855f7]\">{option.label}</label>\n        </div>\n      ))}\n    </div>\n  );\n};\n\nconst Dropdown = ({ value, onChange, options }) => {\n  return (\n    <select\n      value={value}\n      onChange={onChange}\n      className=\"bg-[#2f343a] p-2 rounded-2xl shadow-md shadow-[#1a1d23] w-full\"\n    >\n      {options.map((option) => (\n        <option key={option.value} value={option.value}>\n          {option.label}\n        </option>\n      ))}\n    </select>\n  );\n};\n\nconst Textarea = ({ value, onChange, placeholder }) => {\n  return (\n    <textarea\n      value={value}\n      onChange={onChange}\n      placeholder={placeholder}\n      className=\"bg-[#2f343a] p-2 rounded-2xl shadow-md shadow-[#1a1d23] w-full h-[100px]\"\n    />\n  );\n};\n\nconst Checkbox = ({ checked, onChange, label }) => {\n  return (\n    <div className=\"flex gap-2\">\n      <input\n        type=\"checkbox\"\n        checked={checked}\n        onChange={onChange}\n        className=\"bg-[#2f343a] p-2 rounded-2xl shadow-md shadow-[#1a1d23]\"\n      />\n      <label className=\"text-[#a855f7]\">{label}</label>\n    </div>\n  );\n};\n\nexport default RegistrationPage;",
+    "structuredJson": {
+      "pages": [
+        "Registration Page"
+      ],
+      "components": [
+        "Input Fields",
+        "Radio Buttons",
+        "Dropdown",
+        "Textarea",
+        "Checkbox",
+        "Icons"
+      ],
+      "features": [
+        "Responsive Design",
+        "Smooth Hover/Focus Effects",
+        "Rounded Corners",
+        "Subtle Shadows",
+        "Gradient Background",
+        "Validation for Password Matching",
+        "Validation for Terms & Conditions Agreement"
+      ]
+    },
+    "prd": "Create a modern responsive registration form with a clean UI. Include the following fields: Full Name, Email Address, Phone Number, Username, Password, Confirm Password, Date of Birth, Gender (radio buttons), Country (dropdown), Address (textarea), and a checkbox for agreeing to Terms & Conditions. Add icons inside input fields, smooth hover/focus effects, rounded corners, subtle shadows, and a gradient background.",
+    "timestamp": 1776350813939,
+    "title": "Create a modern responsive reg..."
+  },
+  {
+    "id": "796lgc",
+    "code": "import React, { useState } from 'react';\n\nfunction Button({ children, onClick }) {\n  return (\n    <button\n      className=\"bg-cyan-500 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded\"\n      onClick={onClick}\n    >\n      {children}\n    </button>\n  );\n}\n\nfunction CreateFunctionality() {\n  const [inputValue, setInputValue] = useState('');\n  const [createdItems, setCreatedItems] = useState([]);\n\n  const handleCreate = () => {\n    if (inputValue) {\n      setCreatedItems([...createdItems, inputValue]);\n      setInputValue('');\n    }\n  };\n\n  return (\n    <div className=\"bg-gray-900 p-4 rounded-lg shadow-lg\">\n      <h2 className=\"text-purple-500 text-2xl font-bold mb-4\">Create Item</h2>\n      <input\n        type=\"text\"\n        className=\"bg-gray-800 text-white p-2 rounded-lg w-full mb-4\"\n        value={inputValue}\n        onChange={(e) => setInputValue(e.target.value)}\n        placeholder=\"Enter item name\"\n      />\n      <Button onClick={handleCreate}>Create</Button>\n      <ul className=\"list-none p-0 m-0 mt-4\">\n        {createdItems.map((item, index) => (\n          <li\n            key={index}\n            className=\"bg-gray-800 p-2 rounded-lg mb-2 flex justify-between items-center\"\n          >\n            <span className=\"text-white\">{item}</span>\n            <svg\n              xmlns=\"http://www.w3.org/2000/svg\"\n              className=\"h-5 w-5 text-purple-500\"\n              viewBox=\"0 0 20 20\"\n              fill=\"currentColor\"\n            >\n              <path\n                fillRule=\"evenodd\"\n                d=\"M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 000 2h6a1 1 0 100-2H7z\"\n                clipRule=\"evenodd\"\n              />\n            </svg>\n          </li>\n        ))}\n      </ul>\n    </div>\n  );\n}\n\nfunction App() {\n  return (\n    <div className=\"h-screen bg-gray-900 p-4 flex justify-center items-center\">\n      <CreateFunctionality />\n    </div>\n  );\n}\n\nexport default App;",
+    "structuredJson": {
+      "pages": [],
+      "components": [
+        "button"
+      ],
+      "features": [
+        "create functionality"
+      ]
+    },
+    "prd": "create button",
+    "timestamp": 1776350702107,
+    "title": "create button"
+  },
+  {
+    "id": "l73sf8",
+    "code": "import React from 'react';\n\nconst TextInput = ({ placeholder, value, onChange }) => {\n  return (\n    <div className=\"bg-gray-800 bg-opacity-50 rounded-lg p-2 flex items-center\">\n      <input\n        type=\"text\"\n        className=\"bg-transparent border-0 outline-none text-white w-full pl-2\"\n        placeholder={placeholder}\n        value={value}\n        onChange={onChange}\n      />\n    </div>\n  );\n};\n\nconst App = () => {\n  const [inputValue, setInputValue] = React.useState('');\n\n  const handleInputChange = (e) => {\n    setInputValue(e.target.value);\n  };\n\n  return (\n    <div className=\"h-screen w-screen flex justify-center items-center bg-gray-900\">\n      <div className=\"bg-gray-800 bg-opacity-50 rounded-lg p-4 w-1/2\">\n        <TextInput\n          placeholder=\"Enter your text\"\n          value={inputValue}\n          onChange={handleInputChange}\n        />\n      </div>\n    </div>\n  );\n};\n\nexport default App;",
+    "structuredJson": {
+      "pages": [],
+      "components": [
+        "TextInput"
+      ],
+      "features": [
+        "Text Input"
+      ]
+    },
+    "prd": "create textinput",
+    "timestamp": 1776350458061,
+    "title": "create textinput"
+  }
+]

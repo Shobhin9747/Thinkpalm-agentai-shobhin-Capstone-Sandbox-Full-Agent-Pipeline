@@ -43,6 +43,7 @@ interface RunOrchestratorInput {
   userRequest: string;
   systemPrompt?: string;
   onTrace?: (entry: OrchestratorTraceEntry) => void;
+  structuredJson?: any;
 }
 
 interface RunOrchestratorOutput {
@@ -170,7 +171,7 @@ export async function runOrchestrator(input: RunOrchestratorInput): Promise<RunO
   const loopInput = {
     config: input.providerConfig,
     systemPrompt: ORCHESTRATOR_SYSTEM_PROMPT,
-    userPrompt: `Session ID: ${input.sessionId}\nUser request: ${input.userRequest}`,
+    userPrompt: `Session ID: ${input.sessionId}\nUser request: ${input.userRequest}${input.structuredJson ? `\n\nAgent 1 [Analyzer] Structured Context:\n${JSON.stringify(input.structuredJson, null, 2)}` : ""}`,
     tools,
     toolHandlers,
     maxSteps: 10,

@@ -9,14 +9,9 @@ interface HistoryItem {
   id: string;
   code: string;
   prd: string;
+  structuredJson?: any;
   timestamp: number;
   title: string;
-}
-
-interface TraceItem {
-  agent: 'orchestrator' | 'architect' | 'developer';
-  action: string;
-  ts: number;
 }
 
 const Icons = {
@@ -33,6 +28,11 @@ const Icons = {
   Cpu: () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
       <rect width="16" height="16" x="4" y="4" rx="2" /><rect width="6" height="6" x="9" y="9" rx="1" /><path d="M15 2v2" /><path d="M15 20v2" /><path d="M2 15h2" /><path d="M20 15h2" /><path d="M9 2v2" /><path d="M9 20v2" /><path d="M2 9h2" /><path d="M20 9h2" />
+    </svg>
+  ),
+  Database: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+      <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
     </svg>
   ),
   Layers: () => (
@@ -64,185 +64,125 @@ const Icons = {
 
 export default function Home() {
   const [prd, setPrd] = useState('');
+  const [structuredJson, setStructuredJson] = useState<string>('');
   const [generatedCode, setGeneratedCode] = useState('');
+  
   const [isGenerating, setIsGenerating] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
-  const [sessionId, setSessionId] = useState('');
-  const [trace, setTrace] = useState<TraceItem[]>([]);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [isTraceOpen, setIsTraceOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'preview' | 'code'>('preview');
+  const [activeTab, setActiveTab] = useState<'analyzer' | 'preview' | 'code'>('preview');
+  
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
-
-  const latestTrace = trace.length ? trace[trace.length - 1] : null;
-
-  const displayStatus = (() => {
-    if (errorMessage) return `ERROR: ${errorMessage}`;
-    if (isGenerating) return latestTrace ? `${latestTrace.agent.toUpperCase()}: ${latestTrace.action}` : 'ORCHESTRATOR: Starting tool loop...';
-    if (latestTrace) return `${latestTrace.agent.toUpperCase()}: ${latestTrace.action}`;
-    return 'System Operational';
-  })();
-
-  const formatTraceLabel = (item: TraceItem) =>
-    `${item.agent.toUpperCase()} / ${item.action.replaceAll('_', ' ')}`;
-
-  const toggleTrace = () => setIsTraceOpen((v) => !v);
+  const [sessionId, setSessionId] = useState<string>('');
 
   useEffect(() => {
-    const storedSessionId = localStorage.getItem('ai_ui_session_id');
-    if (storedSessionId) {
-      setSessionId(storedSessionId);
-    } else {
-      const nextSessionId = crypto.randomUUID();
-      localStorage.setItem('ai_ui_session_id', nextSessionId);
-      setSessionId(nextSessionId);
+    let sid = localStorage.getItem('ai_agent_session_id');
+    if (!sid) {
+      sid = 'sid_' + Math.random().toString(36).substring(7);
+      localStorage.setItem('ai_agent_session_id', sid);
     }
+    setSessionId(sid);
 
-    const saved = localStorage.getItem('ai_ui_history');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setHistory(parsed);
-      } catch (e) {
-        console.error("Failed to load history", e);
-      }
-    }
+    // Load Server Memory
+    fetch('/api/memory')
+      .then(r => r.json())
+      .then(d => {
+        if (d.history) setHistory(d.history);
+      })
+      .catch(console.error);
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('ai_ui_history', JSON.stringify(history));
-  }, [history]);
-
   const handleGenerate = async () => {
-    if (!prd.trim() || !sessionId) return;
+    if (!prd.trim()) return;
 
     setIsGenerating(true);
-    setTrace([]);
-    setErrorMessage('');
-    setIsTraceOpen(true);
-    setStatusMessage('');
-
-    const currentPrd = prd;
+    setStatusMessage('AGENT 1 [PRD Analyzer]: Extracting Requirements...');
+    setActiveTab('analyzer');
+    setStructuredJson('');
+    setGeneratedCode('');
 
     try {
-      const response = await fetch('/api/generate/stream', {
+      // Step 1: Analyzer Agent Call
+      const analyzeRes = await fetch('/api/analyze', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'text/event-stream'
-        },
-        body: JSON.stringify({ prd: currentPrd, sessionId }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prd, sessionId }),
       });
+      const analyzeData = await analyzeRes.json();
+      
+      if (!analyzeRes.ok) throw new Error(analyzeData.error);
+      
+      setStructuredJson(JSON.stringify(analyzeData.data, null, 2));
 
-      if (!response.ok) {
-        const text = await response.text().catch(() => '');
-        throw new Error(text || 'Pipeline request failed');
+      setStatusMessage('AGENT 2 [UI Generator]: Synthesizing Components...');
+      
+      // Step 2: Generator Agent Call
+      const generateRes = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          prd, 
+          structuredJson: analyzeData.data,
+          sessionId 
+        }),
+      });
+      const generateData = await generateRes.json();
+      
+      if (!generateRes.ok) throw new Error(generateData.error);
+
+      if (generateData.code) {
+        setStatusMessage('TOOLS: Preview & Export Functions Executed...');
+        await new Promise(r => setTimeout(r, 800));
+
+        setGeneratedCode(generateData.code);
+        setActiveTab('preview');
+
+        const newItem: HistoryItem = {
+          id: Math.random().toString(36).substring(7),
+          code: generateData.code,
+          structuredJson: analyzeData.data,
+          prd: prd,
+          timestamp: Date.now(),
+          title: prd.slice(0, 30) + (prd.length > 30 ? '...' : '')
+        };
+        
+        // Save Server Memory
+        await fetch('/api/memory', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ item: newItem })
+        });
+
+        setHistory(prev => [newItem, ...prev]);
+        setSelectedHistoryId(newItem.id);
       }
-
-      if (!response.body) {
-        throw new Error('No response stream available');
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder('utf-8');
-      let buffer = '';
-      let doneReceived = false;
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const normalized = buffer.replace(/\r\n/g, '\n').replace(/\r/g, '');
-        const parts = normalized.split('\n\n');
-        buffer = parts.pop() || '';
-
-        for (const part of parts) {
-          const lines = part.split('\n').map((l) => l.trim());
-          let eventType = 'message';
-          const dataLines: string[] = [];
-
-          for (const line of lines) {
-            if (line.startsWith('event:')) {
-              eventType = line.slice('event:'.length).trim();
-            } else if (line.startsWith('data:')) {
-              dataLines.push(line.slice('data:'.length).trim());
-            }
-          }
-
-          const dataStr = dataLines.join('\n');
-          if (!dataStr) continue;
-
-          let payload: unknown = null;
-          try {
-            payload = JSON.parse(dataStr) as unknown;
-          } catch {
-            continue;
-          }
-
-          const payloadObj =
-            payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : null;
-
-          if (eventType === 'trace') {
-            const item = payload as TraceItem;
-            if (item && item.agent && item.action) {
-              setTrace((prev) => [...prev, item]);
-            }
-          }
-
-          if (eventType === 'done') {
-            doneReceived = true;
-            const code = payloadObj?.code;
-            if (typeof code === 'string') {
-              setGeneratedCode(code);
-              setActiveTab('preview');
-
-              const newItem: HistoryItem = {
-                id: Math.random().toString(36).substring(7),
-                code,
-                prd: currentPrd,
-                timestamp: Date.now(),
-                title: currentPrd.slice(0, 30) + (currentPrd.length > 30 ? '...' : '')
-              };
-              setHistory((prev) => [newItem, ...prev]);
-              setSelectedHistoryId(newItem.id);
-            }
-          }
-
-          if (eventType === 'error') {
-            const message = typeof payloadObj?.message === 'string' ? payloadObj.message : 'Synthesis failed';
-            setErrorMessage(message);
-            setIsGenerating(false);
-            setStatusMessage('');
-          }
-        }
-      }
-
-      if (!doneReceived) {
-        setErrorMessage('Pipeline ended without final code');
-      }
-
-      setIsGenerating(false);
-      setStatusMessage('');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Generation failed:', error);
-      const message = error instanceof Error ? error.message : 'Pipeline interrupted.';
-      setErrorMessage(message);
+      setStatusMessage(error.message || 'ERROR: Pipeline interrupted.');
+    } finally {
       setIsGenerating(false);
-      setStatusMessage('');
+      setTimeout(() => setStatusMessage(''), 5000);
     }
   };
 
   const loadFromHistory = (item: HistoryItem) => {
     setPrd(item.prd);
+    if (item.structuredJson) setStructuredJson(JSON.stringify(item.structuredJson, null, 2));
     setGeneratedCode(item.code);
     setSelectedHistoryId(item.id);
     setActiveTab('preview');
   };
 
-  const deleteHistoryItem = (id: string, e: React.MouseEvent) => {
+  const deleteHistoryItem = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    // Delete from Server Memory
+    await fetch('/api/memory', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    
     setHistory(prev => prev.filter(item => item.id !== id));
     if (selectedHistoryId === id) setSelectedHistoryId(null);
   };
@@ -265,7 +205,7 @@ export default function Home() {
             <div className="flex items-center gap-2 mt-0.5">
               <span className={`w-1.5 h-1.5 rounded-full ${isGenerating ? 'bg-orange-500 animate-pulse' : 'bg-emerald-500'}`} />
               <p className="text-[9px] text-slate-500 font-bold uppercase tracking-[0.2em]">
-                {statusMessage || displayStatus}
+                {statusMessage || 'System Operational'}
               </p>
             </div>
           </div>
@@ -274,7 +214,7 @@ export default function Home() {
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-4 px-4 py-1.5 glass-morphism rounded-xl border border-white/5">
             <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              <Icons.Cpu /> ENGINE_V2.0
+              <Icons.Cpu /> AGENT_SWARM_V1.0
             </div>
           </div>
         </div>
@@ -324,11 +264,20 @@ export default function Home() {
           {/* PREVIEW/CODE PANEL (Right) */}
           <section className="flex-1 flex flex-col min-w-0 bg-black/20">
             {/* Nav Tabs */}
-            <div className="h-14 flex items-center justify-between px-6 border-b border-white/5 bg-black/40 shrink-0">
-              <div className="flex p-1 bg-[#10141d] rounded-xl border border-white/10">
+            <div className="h-14 overflow-x-auto custom-scrollbar flex items-center justify-between px-6 border-b border-white/5 bg-black/40 shrink-0">
+              <div className="flex p-1 bg-[#10141d] rounded-xl border border-white/10 shrink-0">
+                <button
+                  onClick={() => setActiveTab('analyzer')}
+                  className={`flex items-center gap-2 px-5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'analyzer'
+                    ? 'bg-orange-500 text-white shadow-[0_0_20px_rgba(249,115,22,0.3)]'
+                    : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
+                    }`}
+                >
+                  <Icons.Database /> Analyzer JSON
+                </button>
                 <button
                   onClick={() => setActiveTab('preview')}
-                  className={`flex items-center gap-2 px-6 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'preview'
+                  className={`flex items-center gap-2 px-5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'preview'
                     ? 'bg-cyan-500 text-white shadow-[0_0_20px_rgba(34,211,238,0.3)]'
                     : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
                     }`}
@@ -337,54 +286,39 @@ export default function Home() {
                 </button>
                 <button
                   onClick={() => setActiveTab('code')}
-                  className={`flex items-center gap-2 px-6 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'code'
+                  className={`flex items-center gap-2 px-5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'code'
                     ? 'bg-purple-500 text-white shadow-[0_0_20px_rgba(168,85,247,0.3)]'
                     : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
                     }`}
                 >
-                  <Icons.Terminal /> Code
+                  <Icons.Terminal /> Export
                 </button>
               </div>
 
-              <div className="relative hidden md:flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={toggleTrace}
-                  className="flex items-center gap-2 text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] bg-white/5 px-3 py-1.5 rounded-full border border-white/5 hover:bg-white/10 transition-colors"
-                >
-                  <Icons.Sparkles /> {latestTrace ? formatTraceLabel(latestTrace) : 'Synthesis v2.1'}
-                </button>
-
-                {isTraceOpen && trace.length > 0 ? (
-                  <div className="absolute right-0 top-full mt-2 w-[280px] max-h-[260px] overflow-y-auto custom-scrollbar rounded-xl border border-white/10 bg-[#0b0f18] shadow-[0_0_30px_rgba(0,0,0,0.6)] p-3 z-50">
-                    <div className="px-1 py-1">
-                      <p className="text-[10px] font-black text-slate-200 uppercase tracking-[0.2em]">Trace Actions</p>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      {trace.map((item) => (
-                        <div
-                          key={`${item.agent}-${item.action}-${item.ts}`}
-                          className="px-2 py-2 rounded-lg bg-white/5 border border-white/10"
-                        >
-                          <p className="text-[9px] text-cyan-300 font-black uppercase tracking-wide">{item.agent}</p>
-                          <p className="text-[9px] text-slate-400 uppercase tracking-wide">
-                            {item.action.replaceAll('_', ' ')}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
+              <div className="hidden lg:flex items-center gap-2 text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] bg-white/5 px-3 py-1.5 rounded-full border border-white/5 whitespace-nowrap ml-4">
+                <Icons.Sparkles /> Pipeline Active
               </div>
             </div>
 
             {/* Viewport Content */}
             <div className="flex-1 relative overflow-hidden">
-              {activeTab === 'preview' ? (
+              {activeTab === 'analyzer' && (
+                <div className="h-full w-full p-6 overflow-y-auto custom-scrollbar animate-in fade-in duration-500 bg-[#0a0a0f]">
+                  <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+                    Agent 1 Output (Structured Memory)
+                  </h2>
+                  <pre className="text-sm text-cyan-300 font-mono whitespace-pre-wrap">
+                    {structuredJson ? structuredJson : "// Waiting for Analyzer Agent output..."}
+                  </pre>
+                </div>
+              )}
+              {activeTab === 'preview' && (
                 <div className="h-full animate-in fade-in duration-500">
                   <ComponentPreview code={generatedCode} isGenerating={isGenerating} />
                 </div>
-              ) : (
+              )}
+              {activeTab === 'code' && (
                 <div className="h-full animate-in scale-in duration-500">
                   <CodeExporter code={generatedCode} />
                 </div>
