@@ -2,12 +2,12 @@
 
 A high-performance, distraction-free system for generating premium React components using an **AI-driven multi-agent pipeline**. The system evolves from a PRD-based UI generator into a complete **agentic architecture with memory, tool-calling, and multi-agent orchestration**.
 
+![Agentic Pipeline Dashboard Prototype](src/assets/prototype.png)
+
 <video width="100%" controls poster="src/assets/prototype.png">
   <source src="SpecToUIAgent.mp4" type="video/mp4">
   Your browser does not support the video tag. [Watch Demo Video here](SpecToUIAgent.mp4)
 </video>
-
-![Prototype Dashboard](src/assets/prototype.png)
 
 ---
 
