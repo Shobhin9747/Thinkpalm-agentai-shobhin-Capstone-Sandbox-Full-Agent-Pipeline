@@ -44,11 +44,12 @@ Extended Phase 1 into a **complete agentic system** with:
 ---
 
 ### 🔧 Tool Calling Layer
-Agents use tools instead of directly generating everything:
+The Orchestrator autonomously invokes tools to manage worker agents and state:
 
-- `generateComponentTree()`
-- `previewUI()`
-- `exportCode()`
+- `memory_read()` / `memory_write()` — Persistent session context.
+- `run_architect()` — Triggers Agent 2 to produce a UI spec.
+- `run_developer()` — Triggers Agent 3 to synthesize TSX code.
+- `submit_final_component()` — Validates and returns the final product.
 
 ---
 
@@ -64,19 +65,18 @@ Agents use tools instead of directly generating everything:
 
 ---
 
-### 🔄 Agent Flow
+### 🔄 Agentic Execution Flow
 
 ```mermaid
 graph TD
-    User([User PRD Input]) --> Analyzer[Agent 1: PRD Analyzer]
-    Analyzer --> Memory[Memory Store]
-    Memory --> UIGen[Agent 2: UI Generator]
-    UIGen --> Tools[Tool Layer]
-
-    Tools --> Preview[Preview UI]
-    Tools --> Export[Export Code]
-
-    Preview --> UI[Frontend Display]
+    User([User PRD]) --> Manager[Orchestrator Agent]
+    Manager -->|memory_read| Memory[Session Memory]
+    Manager -->|run_architect| Architect[Agent 2: Architect]
+    Architect -->|UI Spec| Manager
+    Manager -->|run_developer| Developer[Agent 3: Developer]
+    Developer -->|TSX Code| Manager
+    Manager -->|memory_write| Memory
+    Manager -->|submit| UI[Live Preview]
 ```
 
 ---
@@ -102,17 +102,14 @@ The system uses a **hybrid execution model**:
 
 ```mermaid
 graph TD
-    User([User]) -->|Inputs PRD| AnalyzerAgent
-    AnalyzerAgent -->|Structured JSON| Memory
-    Memory --> UIGeneratorAgent
-
-    UIGeneratorAgent --> Tools
-
-    Tools -->|Generate UI| API
-    API --> Frontend
-
-    Frontend --> Preview[Babel Preview]
-    Frontend --> Export[Code Viewer]
+    User([User]) -->|Request| Orchestrator
+    Orchestrator -->|Analyze| Architect
+    Architect -->|Spec| Orchestrator
+    Orchestrator -->|Develop| Developer
+    Developer -->|Code| Orchestrator
+    Orchestrator -->|Store| Memory
+    Orchestrator -->|Execute| Frontend
+    Frontend -->|Render| Preview[Interactive UI]
 ```
 
 ---
@@ -161,12 +158,7 @@ This project demonstrates:
 
 > Transition from a **single AI feature** → **complete agentic system**
 
----
 
-# 👥 Team: TeamDelta
-
-- Shobhin Shaji  
-- Mohammed Jalal MK  
 
 ---
 
