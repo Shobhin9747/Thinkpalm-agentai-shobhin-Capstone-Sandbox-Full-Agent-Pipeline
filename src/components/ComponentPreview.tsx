@@ -1,0 +1,216 @@
+'use client';
+
+import React, { useState } from 'react';
+
+const Icons = {
+  Eye: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-cyan-400">
+      <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0z" /><circle cx="12" cy="12" r="3" />
+    </svg>
+  ),
+  Monitor: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+      <rect width="20" height="14" x="2" y="3" rx="2" /><line x1="8" x2="16" y1="21" y2="21" /><line x1="12" x2="12" y1="17" y2="21" />
+    </svg>
+  ),
+  Tablet: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+      <rect width="16" height="20" x="4" y="2" rx="2" /><line x1="12" x2="12" y1="18" y2="18" />
+    </svg>
+  ),
+  Smartphone: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+      <rect width="10" height="18" x="7" y="3" rx="2" /><line x1="12" x2="12" y1="18" y2="18" />
+    </svg>
+  ),
+  Refresh: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+      <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 21v-5h5" />
+    </svg>
+  ),
+  Activity: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+      <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+    </svg>
+  )
+};
+
+interface ComponentPreviewProps {
+  code: string;
+  isGenerating: boolean;
+}
+
+const ComponentPreview: React.FC<ComponentPreviewProps> = ({ code, isGenerating }) => {
+  const [viewMode, setViewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+
+  const viewportWidths = {
+    desktop: '100%',
+    tablet: '768px',
+    mobile: '390px'
+  };
+
+  /**
+   * Stips React boilerplate to show only the visual components in the preview.
+   * Extracts the content inside return (...) or the main JSX block.
+   */
+  const cleanCodeForPreview = (rawCode: string) => {
+    if (!rawCode) return '';
+
+    // 1. Try to find the content inside the main return (...) block
+    const returnMatch = rawCode.match(/return\s*\(\s*([\s\S]*)\s*\)\s*;/);
+    let cleaned = '';
+
+    if (returnMatch && returnMatch[1]) {
+      cleaned = returnMatch[1].trim();
+    } else {
+      // 2. Fallback: Strip imports and exports and look for the first JSX tag
+      cleaned = rawCode
+        .replace(/import[\s\S]*?;/g, '')
+        .replace(/export\s+default\s+function[\s\S]*?\{/g, '')
+        .replace(/export\s+default\s+[\s\S]*?;/g, '')
+        .replace(/^\s*\}\s*$/gm, '');
+
+      const firstTag = cleaned.indexOf('<');
+      const lastTag = cleaned.lastIndexOf('>');
+
+      if (firstTag !== -1 && lastTag !== -1) {
+        cleaned = cleaned.substring(firstTag, lastTag + 1).trim();
+      }
+    }
+
+    // 3. Comprehensive React-to-HTML attribute conversion
+    return cleaned
+      .replace(/\bclassName\s*=\s*/g, 'class=')
+      .replace(/\bhtmlFor\s*=\s*/g, 'for=')
+      .replace(/\bstrokeWidth\s*=\s*/g, 'stroke-width=')
+      .replace(/\bstrokeLinecap\s*=\s*/g, 'stroke-linecap=')
+      .replace(/\bstrokeLinejoin\s*=\s*/g, 'stroke-linejoin=')
+      .replace(/\bonClick\s*=\s*/g, 'onclick=')
+      .trim();
+  };
+
+  const wrapCode = (rawCode: string) => {
+    const visualContent = cleanCodeForPreview(rawCode);
+
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <script src="https://cdn.tailwindcss.com"></script>
+          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+          <style>
+            body { 
+              font-family: 'Inter', sans-serif; 
+              background: #030408; 
+              margin: 0; 
+              color: white; 
+              overflow-x: hidden;
+            }
+            ::-webkit-scrollbar { width: 4px; }
+            ::-webkit-scrollbar-track { background: transparent; }
+            ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+          </style>
+        </head>
+        <body class="p-0 m-0">
+          <div id="app-root" class="animate-in fade-in">
+            ${visualContent || '<div class="flex items-center justify-center min-h-screen text-slate-500 font-mono text-[10px] uppercase tracking-widest">Architect: System Awaiting Payload...</div>'}
+          </div>
+        </body>
+      </html>
+    `;
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-[#030408]/50 overflow-hidden">
+      {/* Toolrail Header */}
+      <div className="h-14 flex items-center justify-between px-6 border-b border-white/5 bg-black/40">
+        <div className="flex items-center gap-6">
+          <div className="flex bg-white/5 p-1 rounded-lg border border-white/5">
+            <button
+              onClick={() => setViewMode('desktop')}
+              className={`p-1.5 rounded-md transition-all ${viewMode === 'desktop' ? 'bg-cyan-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+              title="Desktop View"
+            >
+              <Icons.Monitor />
+            </button>
+            <button
+              onClick={() => setViewMode('tablet')}
+              className={`p-1.5 rounded-md transition-all ${viewMode === 'tablet' ? 'bg-cyan-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+              title="Tablet View"
+            >
+              <Icons.Tablet />
+            </button>
+            <button
+              onClick={() => setViewMode('mobile')}
+              className={`p-1.5 rounded-md transition-all ${viewMode === 'mobile' ? 'bg-cyan-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+              title="Mobile View"
+            >
+              <Icons.Smartphone />
+            </button>
+          </div>
+
+          <div className="h-4 w-px bg-white/10" />
+
+          <button className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-slate-300 transition-colors">
+            <Icons.Refresh /> RE-RENDER
+          </button>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all ${isGenerating ? 'border-orange-500/30 text-orange-400 bg-orange-500/5' : 'border-emerald-500/30 text-emerald-400 bg-emerald-500/5'}`}>
+            <Icons.Activity /> {isGenerating ? 'Synthesizing' : 'Live Render'}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Preview Container with 'Device Bracket' */}
+      <div className="flex-1 overflow-auto p-4 md:p-8 flex justify-center bg-black/20 custom-scrollbar relative">
+        {!code && !isGenerating ? (
+          <div className="flex flex-col items-center justify-center space-y-6 text-center animate-in zoom-in-98 duration-700">
+            <div className="w-20 h-20 rounded-[2.5rem] bg-white/5 border border-white/10 flex items-center justify-center shimmer">
+              <Icons.Eye />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-sm font-black text-slate-200 uppercase tracking-[0.3em]">Architect Node Ready</h3>
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Awaiting PRD to generate UI tree</p>
+            </div>
+          </div>
+        ) : (
+          <div
+            className="relative glass border-[12px] border-[#141822] shadow-[0_0_80px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-700 ease-in-out"
+            style={{ width: viewportWidths[viewMode], height: 'fit-content', minHeight: '600px' }}
+          >
+            {/* Device Status Bar Mockup */}
+            <div className="h-8 bg-[#141822] flex items-center justify-between px-8 border-b border-white/5">
+              <div className="text-[9px] font-mono text-slate-500 tracking-widest">UI_SYNTHESIS_V1.0</div>
+              <div className="flex gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-slate-700" />
+                <div className="w-1.5 h-1.5 rounded-full bg-slate-700" />
+                <div className="w-1.5 h-1.5 rounded-full bg-cyan-700" />
+              </div>
+            </div>
+
+            {/* Loader Overlay */}
+            {isGenerating && (
+              <div className="absolute inset-0 z-50 bg-[#030408]/80 backdrop-blur-md flex flex-col items-center justify-center space-y-4">
+                <div className="w-10 h-10 border-2 border-cyan-500/20 border-t-cyan-400 rounded-full animate-spin" />
+                <p className="text-[10px] font-black text-cyan-500 uppercase tracking-[0.2em] animate-pulse">Building Surface...</p>
+              </div>
+            )}
+
+            <iframe
+              key={code}
+              srcDoc={wrapCode(code)}
+              className="w-full h-full border-none min-h-[570px]"
+              title="Preview"
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ComponentPreview;
