@@ -32,6 +32,9 @@ This application runs a robust pipeline consisting of three specialized AI Agent
     - Code execution stability
   - Corrects bugs and automatically handles self-correction before rendering.
 
+- **Agent 4: Data Schema Generator** 
+  - Reads the PRD to synthesize database formats and state management schemas (e.g., Prisma models, JSON structures, API payloads) tailored specifically for the generated UI components.
+
 ---
 
 ### 🟢 Live Babel Previews

@@ -15,6 +15,7 @@ export async function generateComponentTree(structuredJson: any): Promise<string
 }
 
 import { reviewCodeAndRefine } from '@/agents/codeReviewer';
+import { synthesizeSchema } from '@/agents/schemaGenerator';
 
 /**
  * Tool: reviewCode
@@ -24,6 +25,15 @@ export async function reviewCode(code: string, structuredJson: any): Promise<str
   console.log("TOOL CALLED: reviewCode checking code quality...");
   const refinedCode = await reviewCodeAndRefine(code, structuredJson);
   return refinedCode;
+}
+
+/**
+ * Tool: generateDataSchema
+ * Agent 4 generates backend database and API schemas.
+ */
+export async function generateDataSchema(structuredJson: any): Promise<string> {
+  console.log("TOOL CALLED: generateDataSchema building backend payload schema...");
+  return await synthesizeSchema(structuredJson);
 }
 
 /**

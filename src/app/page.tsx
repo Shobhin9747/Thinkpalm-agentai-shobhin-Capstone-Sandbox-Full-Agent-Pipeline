@@ -66,10 +66,11 @@ export default function Home() {
   const [prd, setPrd] = useState('');
   const [structuredJson, setStructuredJson] = useState<string>('');
   const [generatedCode, setGeneratedCode] = useState('');
+  const [schemaCode, setSchemaCode] = useState('');
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
-  const [activeTab, setActiveTab] = useState<'analyzer' | 'preview' | 'code'>('preview');
+  const [activeTab, setActiveTab] = useState<'analyzer' | 'preview' | 'code' | 'schema'>('preview');
   
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
@@ -100,6 +101,7 @@ export default function Home() {
     setActiveTab('analyzer');
     setStructuredJson('');
     setGeneratedCode('');
+    setSchemaCode('');
 
     try {
       // Step 1: Analyzer Agent Call
@@ -112,23 +114,38 @@ export default function Home() {
       
       if (!analyzeRes.ok) throw new Error(analyzeData.error);
       
-      setStructuredJson(JSON.stringify(analyzeData.data, null, 2));
+      const sj = JSON.stringify(analyzeData.data, null, 2);
+      setStructuredJson(sj);
 
-      setStatusMessage('AGENT 2 [UI Generator]: Synthesizing Components...');
+      setStatusMessage('AGENT 2 & 4: Generating UI & Data Schema...');
       
-      // Step 2: Generator Agent Call
-      const generateRes = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          prd, 
-          structuredJson: analyzeData.data,
-          sessionId 
+      // PARALLEL CALLS: UI Generator and Schema Generator
+      const [generateRes, schemaRes] = await Promise.all([
+        fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            prd, 
+            structuredJson: analyzeData.data,
+            sessionId 
+          }),
         }),
-      });
+        fetch('/api/schema', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            structuredJson: analyzeData.data 
+          }),
+        })
+      ]);
+
       const generateData = await generateRes.json();
-      
+      const schemaData = await schemaRes.json();
+
       if (!generateRes.ok) throw new Error(generateData.error);
+      if (schemaData.schema) {
+        setSchemaCode(schemaData.schema);
+      }
 
       if (generateData.code) {
         setStatusMessage('AGENT 3 [Code Reviewer]: Polishing Elements...');
@@ -292,6 +309,15 @@ export default function Home() {
                   <Icons.Database /> Analyzer JSON
                 </button>
                 <button
+                  onClick={() => setActiveTab('schema')}
+                  className={`flex items-center gap-2 px-5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'schema'
+                    ? 'bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)]'
+                    : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
+                    }`}
+                >
+                  <Icons.Layers /> Schema
+                </button>
+                <button
                   onClick={() => setActiveTab('preview')}
                   className={`flex items-center gap-2 px-5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'preview'
                     ? 'bg-cyan-500 text-white shadow-[0_0_20px_rgba(34,211,238,0.3)]'
@@ -327,6 +353,15 @@ export default function Home() {
                   <pre className="text-sm text-cyan-300 font-mono whitespace-pre-wrap">
                     {structuredJson ? structuredJson : "// Waiting for Analyzer Agent output..."}
                   </pre>
+                </div>
+              )}
+              {activeTab === 'schema' && (
+                <div className="h-full w-full p-6 overflow-y-auto custom-scrollbar animate-in fade-in duration-500 bg-[#03060a]">
+                  <h2 className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    Agent 4 Output (Data Schema & API)
+                  </h2>
+                  <CodeExporter code={schemaCode || "// Synthesizing data schema..."} />
                 </div>
               )}
               {activeTab === 'preview' && (
