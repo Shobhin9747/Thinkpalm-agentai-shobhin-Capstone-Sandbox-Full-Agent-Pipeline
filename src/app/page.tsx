@@ -131,15 +131,31 @@ export default function Home() {
       if (!generateRes.ok) throw new Error(generateData.error);
 
       if (generateData.code) {
+        setStatusMessage('AGENT 3 [Code Reviewer]: Polishing Elements...');
+        
+        // Step 3: Reviewer Agent Call
+        const reviewRes = await fetch('/api/review', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            code: generateData.code,
+            structuredJson: analyzeData.data 
+          }),
+        });
+        
+        const reviewData = await reviewRes.json();
+        if (!reviewRes.ok) throw new Error(reviewData.error);
+
         setStatusMessage('TOOLS: Preview & Export Functions Executed...');
         await new Promise(r => setTimeout(r, 800));
 
-        setGeneratedCode(generateData.code);
+        const finalCode = reviewData.code || generateData.code;
+        setGeneratedCode(finalCode);
         setActiveTab('preview');
 
         const newItem: HistoryItem = {
           id: Math.random().toString(36).substring(7),
-          code: generateData.code,
+          code: finalCode,
           structuredJson: analyzeData.data,
           prd: prd,
           timestamp: Date.now(),

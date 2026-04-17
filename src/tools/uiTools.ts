@@ -14,6 +14,18 @@ export async function generateComponentTree(structuredJson: any): Promise<string
   return code;
 }
 
+import { reviewCodeAndRefine } from '@/agents/codeReviewer';
+
+/**
+ * Tool: reviewCode
+ * Simulates Agent 3 picking up the generated component and reviewing/enhancing it.
+ */
+export async function reviewCode(code: string, structuredJson: any): Promise<string> {
+  console.log("TOOL CALLED: reviewCode checking code quality...");
+  const refinedCode = await reviewCodeAndRefine(code, structuredJson);
+  return refinedCode;
+}
+
 /**
  * Tool: previewUI
  * Simulates an action to format/prepare the code for preview.

@@ -49,48 +49,35 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ code, isGenerating 
     mobile: '390px'
   };
 
-  /**
-   * Stips React boilerplate to show only the visual components in the preview.
-   * Extracts the content inside return (...) or the main JSX block.
-   */
-  const cleanCodeForPreview = (rawCode: string) => {
-    if (!rawCode) return '';
+  const wrapCode = (rawCode: string) => {
+    if (!rawCode) return `
+      <!DOCTYPE html><html><body style="background:#030408;color:#475569;display:flex;align-items:center;justify-content:center;height:100vh;font-family:monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;margin:0;">
+        Architect: System Awaiting Payload...
+      </body></html>
+    `;
 
-    // 1. Try to find the content inside the main return (...) block
-    const returnMatch = rawCode.match(/return\s*\(\s*([\s\S]*)\s*\)\s*;/);
-    let cleaned = '';
-
-    if (returnMatch && returnMatch[1]) {
-      cleaned = returnMatch[1].trim();
+    // 1. Remove imports entirely
+    let scriptCode = rawCode.replace(/import\s+.*?[\w{}*]+.*?from\s+['"].*?['"];?/g, '');
+    scriptCode = scriptCode.replace(/import\s+['"].*?['"];?/g, '');
+    
+    // 2. Find the default export target and strip the "export default" syntax
+    let renderTarget = "App"; // default guess
+    const exportFunctionMatch = scriptCode.match(/export\s+default\s+function\s+([A-Za-z0-9_]+)/);
+    
+    if (exportFunctionMatch) {
+      renderTarget = exportFunctionMatch[1];
+      scriptCode = scriptCode.replace(/export\s+default\s+function/, 'function');
     } else {
-      // 2. Fallback: Strip imports and exports and look for the first JSX tag
-      cleaned = rawCode
-        .replace(/import[\s\S]*?;/g, '')
-        .replace(/export\s+default\s+function[\s\S]*?\{/g, '')
-        .replace(/export\s+default\s+[\s\S]*?;/g, '')
-        .replace(/^\s*\}\s*$/gm, '');
-
-      const firstTag = cleaned.indexOf('<');
-      const lastTag = cleaned.lastIndexOf('>');
-
-      if (firstTag !== -1 && lastTag !== -1) {
-        cleaned = cleaned.substring(firstTag, lastTag + 1).trim();
+      const exportVarMatch = scriptCode.match(/export\s+default\s+([A-Za-z0-9_]+)/);
+      if (exportVarMatch) {
+         renderTarget = exportVarMatch[1];
+         scriptCode = scriptCode.replace(new RegExp(`export\\s+default\\s+${exportVarMatch[1]};?`, 'g'), '');
       }
     }
 
-    // 3. Comprehensive React-to-HTML attribute conversion
-    return cleaned
-      .replace(/\bclassName\s*=\s*/g, 'class=')
-      .replace(/\bhtmlFor\s*=\s*/g, 'for=')
-      .replace(/\bstrokeWidth\s*=\s*/g, 'stroke-width=')
-      .replace(/\bstrokeLinecap\s*=\s*/g, 'stroke-linecap=')
-      .replace(/\bstrokeLinejoin\s*=\s*/g, 'stroke-linejoin=')
-      .replace(/\bonClick\s*=\s*/g, 'onclick=')
-      .trim();
-  };
-
-  const wrapCode = (rawCode: string) => {
-    const visualContent = cleanCodeForPreview(rawCode);
+    const shim = `
+      const { useState, useEffect, useRef, useMemo, useCallback } = React;
+    `;
 
     return `
       <!DOCTYPE html>
@@ -112,11 +99,31 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ code, isGenerating 
             ::-webkit-scrollbar-track { background: transparent; }
             ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
           </style>
+          
+          <!-- React + Babel Standalone -->
+          <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+          <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+          <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
         </head>
         <body class="p-0 m-0">
-          <div id="app-root" class="animate-in fade-in">
-            ${visualContent || '<div class="flex items-center justify-center min-h-screen text-slate-500 font-mono text-[10px] uppercase tracking-widest">Architect: System Awaiting Payload...</div>'}
-          </div>
+          <div id="app-root" class="animate-in fade-in h-screen w-screen"></div>
+          
+          <script type="text/babel">
+            try {
+              ${shim}
+              ${scriptCode}
+              
+              const CustomComponent = ${renderTarget};
+              const root = ReactDOM.createRoot(document.getElementById('app-root'));
+              root.render(<CustomComponent />);
+            } catch (err) {
+              console.error("Pipeline render error", err);
+              document.getElementById('app-root').innerHTML = 
+                '<div style="color:#ef4444; padding: 20px; font-family: monospace; font-size: 12px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); margin: 20px; border-radius: 8px;">' + 
+                '<strong>UI Synthesis Evaluation Error:</strong><br><br>' + err.toString() + 
+                '</div>';
+            }
+          </script>
         </body>
       </html>
     `;
