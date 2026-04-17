@@ -1,67 +1,48 @@
 # 🌌 UI Generator + Agent Pipeline
 
-A high-performance, distraction-free system for generating premium React components using an **AI-driven multi-agent pipeline**. The system evolves from a PRD-based UI generator into a complete **agentic architecture with memory, tool-calling, and multi-agent orchestration**.
+A high-performance, distraction-free system for generating premium React components using an **AI-driven multi-agent pipeline**. The system evolves from a simple UI generator into a complete **linear agentic pipeline with specialized auditing**.
 
-![Agentic Pipeline Dashboard Prototype](src/assets/prototype.png)
+![Agentic Pipeline Dashboard](src/assets/DemoImg.png)
 
-<video width="100%" controls poster="src/assets/prototype.png">
+<video width="100%" controls poster="src/assets/DemoImg.png">
   <source src="SpecToUIAgent.mp4" type="video/mp4">
   Your browser does not support the video tag. [Watch Demo Video here](SpecToUIAgent.mp4)
 </video>
 
 ---
 
-# 🚀 Project Phases
+# 🚀 Project Architecture
 
-## 🟢 Phase 1 — UI Generator (Frontend Task)
+This application runs a robust pipeline consisting of three specialized AI Agents working sequentially to ensure a flawless final output. 
 
-Built a React/Next.js application where:
+### 🤖 Multi-Agent Pipeline
 
-- User provides a **Product Requirements Document (PRD)**
-- AI generates:
-  - UI component tree
-  - Tailwind-based React code
-- Features:
-  - Real-time preview using Babel
-  - Code export
-  - Multi-model LLM support
-  - Design history
-
-👉 This phase focuses on **PRD → UI generation**
-
----
-
-## 🔵 Phase 2 — Agent Pipeline (Capstone)
-
-Extended Phase 1 into a **complete agentic system** with:
-
-### 🤖 Multi-Agent Architecture
 - **Agent 1: PRD Analyzer**
-  - Converts raw PRD → structured JSON (pages, components, features)
+  - Converts unstructured PRD (Product Requirements Document) → Structured JSON (pages, components, features).
+  - Uses strictly formatted parsing layers to prepare context.
+
 - **Agent 2: UI Generator**
-  - Converts structured data → React + Tailwind UI
+  - Converts structured JSON → React + Tailwind UI code.
+  - Dictates precise, premium "Dark Glassmorphism" styling.
+
+- **Agent 3: Code Reviewer & Refiner**
+  - Our newest audit layer. Checks the raw Component Tree produced by Agent 2 for:
+    - Tailwind syntax errors
+    - Accessibility concerns (aria labels, semantic HTML)
+    - Code execution stability
+  - Corrects bugs and automatically handles self-correction before rendering.
 
 ---
 
-### 🔧 Tool Calling Layer
-The Orchestrator autonomously invokes tools to manage worker agents and state:
-
-- `memory_read()` / `memory_write()` — Persistent session context.
-- `run_architect()` — Triggers Agent 2 to produce a UI spec.
-- `run_developer()` — Triggers Agent 3 to synthesize TSX code.
-- `submit_final_component()` — Validates and returns the final product.
-
----
+### 🟢 Live Babel Previews
+The UI integrates **Babel Standalone** to instantly compile and run the React output produced by Agent 3 directly in the browser's DOM, meaning you get interactive component previews with state correctly simulated—not just fake HTML dumps.
 
 ### 🧠 Memory System
 - Stores:
   - Previous PRDs
   - Generated UI
   - Structured outputs
-- Enables:
-  - reuse
-  - iteration
-  - history tracking
+- Enables session tracking and prompt iterations.
 
 ---
 
@@ -69,47 +50,10 @@ The Orchestrator autonomously invokes tools to manage worker agents and state:
 
 ```mermaid
 graph TD
-    User([User PRD]) --> Manager[Orchestrator Agent]
-    Manager -->|memory_read| Memory[Session Memory]
-    Manager -->|run_architect| Architect[Agent 2: Architect]
-    Architect -->|UI Spec| Manager
-    Manager -->|run_developer| Developer[Agent 3: Developer]
-    Developer -->|TSX Code| Manager
-    Manager -->|memory_write| Memory
-    Manager -->|submit| UI[Live Preview]
-```
-
----
-
-# ✨ Features
-
-- **🚀 Real-time UI Generation**
-- **🤖 Multi-Agent Pipeline (Analyzer + Generator)**
-- **🧠 Memory Persistence**
-- **🔧 Tool Calling Architecture**
-- **💎 Premium UI Rendering**
-- **🛠 Code Preview + Export**
-- **📦 PRD → Structured → UI Flow**
-
----
-
-# 🏗 Architecture
-
-The system uses a **hybrid execution model**:
-
-- Server: LLM + agent orchestration  
-- Client: UI rendering + preview  
-
-```mermaid
-graph TD
-    User([User]) -->|Request| Orchestrator
-    Orchestrator -->|Analyze| Architect
-    Architect -->|Spec| Orchestrator
-    Orchestrator -->|Develop| Developer
-    Developer -->|Code| Orchestrator
-    Orchestrator -->|Store| Memory
-    Orchestrator -->|Execute| Frontend
-    Frontend -->|Render| Preview[Interactive UI]
+    User([User PRD pasted]) --> Agent1[Agent 1: PRD Analyzer]
+    Agent1 -->|Structured JSON Context| Agent2[Agent 2: UI Generator]
+    Agent2 -->|Raw Component Tree| Agent3[Agent 3: Code Reviewer]
+    Agent3 -->|Polished, Corrected TSX| Render[Babel Live Preview]
 ```
 
 ---
@@ -119,10 +63,10 @@ graph TD
 | Layer | Technologies |
 | :--- | :--- |
 | **Frontend** | React, Next.js 15, Tailwind CSS |
-| **Runtime** | Babel Standalone |
-| **AI Models** | Gemini / Groq / Grok |
-| **Agent System** | Custom multi-agent logic |
-| **Memory** | Local storage / JSON |
+| **Runtime** | Babel Standalone, React DOM |
+| **AI Models** | Gemini 1.5 Pro / Groq (Llama 3.3) / Grok-beta |
+| **Agent System** | Custom multi-agent sequential pipeline |
+| **Tool Calling** | Simulated backend invocation pipelines |
 
 ---
 
@@ -130,11 +74,10 @@ graph TD
 
 ### 1. Setup Environment
 
+Create a `.env` file in the root:
 ```
 NEXT_PUBLIC_GEMINI_API_KEY=your_key_here
 ```
-
----
 
 ### 2. Install
 
@@ -142,23 +85,11 @@ NEXT_PUBLIC_GEMINI_API_KEY=your_key_here
 npm install
 ```
 
----
-
 ### 3. Run
 
 ```
 npm run dev
 ```
-
----
-
-# 🎯 Key Concept
-
-This project demonstrates:
-
-> Transition from a **single AI feature** → **complete agentic system**
-
-
 
 ---
 
