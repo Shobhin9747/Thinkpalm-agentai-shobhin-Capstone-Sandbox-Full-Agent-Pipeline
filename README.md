@@ -37,6 +37,15 @@ This application runs a robust pipeline consisting of three specialized AI Agent
 
 ---
 
+### 🔧 Tool Calling Layer
+Agents use tools instead of directly generating everything:
+
+- `generateComponentTree()`
+- `previewUI()`
+- `exportCode()`
+
+---
+
 ### 🟢 Live Babel Previews
 The UI integrates **Babel Standalone** to instantly compile and run the React output produced by Agent 3 directly in the browser's DOM, meaning you get interactive component previews with state correctly simulated—not just fake HTML dumps.
 
