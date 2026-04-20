@@ -1,4 +1,4 @@
-# 🌌 UI Generator + Agent Pipeline
+# 🌌  Capstone Sandbox-Full Agent Pipeline
 
 A high-performance, distraction-free system for generating premium React components using an **AI-driven multi-agent pipeline**. The system evolves from a simple UI generator into a complete **linear agentic pipeline with specialized auditing**.
 
@@ -102,6 +102,12 @@ npm install
 ```
 npm run dev
 ```
+
+---
+# 👥 Collaborator
+
+- Shobhin Shaji(FrontendDeveloper)
+
 
 ---
 
