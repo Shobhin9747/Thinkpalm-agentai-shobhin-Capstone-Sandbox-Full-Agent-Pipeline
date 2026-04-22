@@ -43,6 +43,8 @@ Agents use tools instead of directly generating everything:
 - `generateComponentTree()`
 - `previewUI()`
 - `exportCode()`
+- `reviewCode()`
+- `generateDataSchema()`
 
 ---
 
